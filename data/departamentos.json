@@ -1,0 +1,252 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "proyecto": "Risk El Salvador - Metodos Numericos (Euler y RK4)",
+    "nota": "r_base y K_base NUNCA se editan en partida. Los cambios por heroes y eventos viven en modificadores.ajustes_continuos (continuo, entra a la EDO) o en modificadores.flags_discretos (discreto, lo maneja la logica de turnos). El campo dueno es null al inicio: el motor asigna jugadores al arrancar la partida."
+  },
+
+  "config_global": {
+    "h_default": 0.1,
+    "h_min": 0.05,
+    "h_max": 3.0,
+    "turnos_prediccion": 5
+  },
+
+  "recursos_def": {
+    "cafe": {
+      "rol": "moneda",
+      "descripcion": "Se genera en la zona occidental y la cordillera. Compra cartas de accion y reduce el cooldown de heroes."
+    },
+    "pupusas": {
+      "rol": "energia",
+      "descripcion": "Aumenta el crecimiento poblacional de las tropas. Producidas en el centro y oriente."
+    }
+  },
+
+  "departamentos": [
+    {
+      "id": "ahuachapan",
+      "nombre": "Ahuachapan",
+      "zona": "Occidental",
+      "color_mask": "#E6194B",
+      "centro": [90, 320],
+      "vecinos": ["santa_ana", "sonsonate"],
+      "tropas": { "dueno": null, "poblacion_actual": 15.0, "r_base": 0.5, "K_base": 45.0 },
+      "recurso": { "tipo": "cafe", "cantidad_actual": 70.0, "r_base": 0.7, "K_base": 110.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "santa_ana",
+      "nombre": "Santa Ana",
+      "zona": "Occidental",
+      "color_mask": "#3CB44B",
+      "centro": [170, 230],
+      "vecinos": ["ahuachapan", "sonsonate", "la_libertad", "chalatenango"],
+      "tropas": { "dueno": null, "poblacion_actual": 22.0, "r_base": 0.8, "K_base": 60.0 },
+      "recurso": { "tipo": "cafe", "cantidad_actual": 80.0, "r_base": 0.7, "K_base": 130.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "sonsonate",
+      "nombre": "Sonsonate",
+      "zona": "Occidental",
+      "color_mask": "#FFE119",
+      "centro": [180, 380],
+      "vecinos": ["ahuachapan", "santa_ana", "la_libertad"],
+      "tropas": { "dueno": null, "poblacion_actual": 18.0, "r_base": 0.6, "K_base": 50.0 },
+      "recurso": { "tipo": "cafe", "cantidad_actual": 60.0, "r_base": 0.6, "K_base": 100.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "chalatenango",
+      "nombre": "Chalatenango",
+      "zona": "Central",
+      "color_mask": "#4363D8",
+      "centro": [330, 150],
+      "vecinos": ["santa_ana", "la_libertad", "san_salvador", "cuscatlan", "cabanas"],
+      "tropas": { "dueno": null, "poblacion_actual": 12.0, "r_base": 0.5, "K_base": 40.0 },
+      "recurso": { "tipo": "cafe", "cantidad_actual": 45.0, "r_base": 0.5, "K_base": 90.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "la_libertad",
+      "nombre": "La Libertad",
+      "zona": "Central",
+      "color_mask": "#F58231",
+      "centro": [320, 380],
+      "vecinos": ["santa_ana", "sonsonate", "chalatenango", "san_salvador", "la_paz"],
+      "tropas": { "dueno": null, "poblacion_actual": 25.0, "r_base": 0.7, "K_base": 65.0 },
+      "recurso": { "tipo": "cafe", "cantidad_actual": 70.0, "r_base": 0.6, "K_base": 120.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "san_salvador",
+      "nombre": "San Salvador",
+      "zona": "Central",
+      "color_mask": "#911EB4",
+      "centro": [400, 300],
+      "vecinos": ["la_libertad", "chalatenango", "cuscatlan", "la_paz"],
+      "tropas": { "dueno": null, "poblacion_actual": 35.0, "r_base": 0.6, "K_base": 90.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 60.0, "r_base": 0.9, "K_base": 140.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "cuscatlan",
+      "nombre": "Cuscatlan",
+      "zona": "Central",
+      "color_mask": "#42D4F4",
+      "centro": [450, 270],
+      "vecinos": ["san_salvador", "chalatenango", "cabanas", "san_vicente", "la_paz"],
+      "tropas": { "dueno": null, "poblacion_actual": 20.0, "r_base": 0.6, "K_base": 50.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 50.0, "r_base": 0.8, "K_base": 100.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "cabanas",
+      "nombre": "Cabanas",
+      "zona": "Paracentral",
+      "color_mask": "#F032E6",
+      "centro": [490, 190],
+      "vecinos": ["chalatenango", "cuscatlan", "san_vicente", "san_miguel"],
+      "tropas": { "dueno": null, "poblacion_actual": 14.0, "r_base": 0.5, "K_base": 45.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 40.0, "r_base": 0.7, "K_base": 90.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "la_paz",
+      "nombre": "La Paz",
+      "zona": "Paracentral",
+      "color_mask": "#BFEF45",
+      "centro": [470, 400],
+      "vecinos": ["la_libertad", "san_salvador", "cuscatlan", "san_vicente", "usulutan"],
+      "tropas": { "dueno": null, "poblacion_actual": 20.0, "r_base": 0.7, "K_base": 55.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 80.0, "r_base": 1.0, "K_base": 150.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "san_vicente",
+      "nombre": "San Vicente",
+      "zona": "Paracentral",
+      "color_mask": "#FABED4",
+      "centro": [540, 320],
+      "vecinos": ["cuscatlan", "cabanas", "la_paz", "usulutan"],
+      "tropas": { "dueno": null, "poblacion_actual": 18.0, "r_base": 0.6, "K_base": 50.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 55.0, "r_base": 0.8, "K_base": 100.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "usulutan",
+      "nombre": "Usulutan",
+      "zona": "Oriental",
+      "color_mask": "#469990",
+      "centro": [620, 400],
+      "vecinos": ["la_paz", "san_vicente", "san_miguel"],
+      "tropas": { "dueno": null, "poblacion_actual": 20.0, "r_base": 0.7, "K_base": 55.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 60.0, "r_base": 0.8, "K_base": 110.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "san_miguel",
+      "nombre": "San Miguel",
+      "zona": "Oriental",
+      "color_mask": "#DCBEFF",
+      "centro": [720, 330],
+      "vecinos": ["usulutan", "cabanas", "morazan", "la_union"],
+      "tropas": { "dueno": null, "poblacion_actual": 28.0, "r_base": 0.9, "K_base": 70.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 65.0, "r_base": 0.9, "K_base": 120.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "morazan",
+      "nombre": "Morazan",
+      "zona": "Oriental",
+      "color_mask": "#9A6324",
+      "centro": [780, 230],
+      "vecinos": ["san_miguel", "la_union"],
+      "tropas": { "dueno": null, "poblacion_actual": 12.0, "r_base": 0.5, "K_base": 40.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 35.0, "r_base": 0.6, "K_base": 80.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    },
+    {
+      "id": "la_union",
+      "nombre": "La Union",
+      "zona": "Oriental",
+      "color_mask": "#800000",
+      "centro": [860, 350],
+      "vecinos": ["san_miguel", "morazan"],
+      "tropas": { "dueno": null, "poblacion_actual": 16.0, "r_base": 0.6, "K_base": 50.0 },
+      "recurso": { "tipo": "pupusas", "cantidad_actual": 45.0, "r_base": 0.7, "K_base": 95.0 },
+      "modificadores": {
+        "heroe_presente": null,
+        "eventos_activos": [],
+        "flags_discretos": { "movimiento_bloqueado": false, "bono_defensa": 0 },
+        "ajustes_continuos": []
+      }
+    }
+  ]
+}

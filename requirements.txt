@@ -1,0 +1,7 @@
+# Risk Matematico - El Salvador  (Python 3.12)
+arcade>=3.0          # motor grafico
+pillow               # generacion y lectura de la mascara del mapa
+numpy                # soporte de calculo y generacion del mapa demo
+matplotlib           # graficas para el informe (Euler vs RK4)
+pytest               # pruebas de los metodos numericos
+# Nota: Euler y RK4 estan implementados a mano en metodos/ (sin scipy).
