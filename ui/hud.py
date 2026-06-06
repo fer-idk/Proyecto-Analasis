@@ -121,15 +121,21 @@ class HUD:
                           colores.VENTANA_ALTO - 156 - i * 20, colores.BLANCO, 11)
 
         # Selector de metodo
-        c.dibujar("metodo_lbl", "Metodo:", TX, 240, colores.BLANCO, 11)
+        c.dibujar("metodo_lbl", "Metodo Matemático:", TX, 240, colores.BLANCO, 11)
         for nombre in ("euler", "rk4"):
             rx, ry, rw, rh = BTN[nombre]
             activo = self.estado.metodo_activo == nombre
-            arcade.draw_rect_filled(arcade.LBWH(rx, ry, rw, rh),
-                                    (60, 90, 60) if activo else (55, 58, 66))
+            
+            # Si está activo, lo hacemos palpitar ligeramente
+            latido_btn = gestor.latido(1.5) if (activo and gestor) else 0
+            
+            color_fondo = (70 + int(30 * latido_btn), 110 + int(30 * latido_btn), 70) if activo else (55, 58, 66)
+            
+            arcade.draw_rect_filled(arcade.LBWH(rx, ry, rw, rh), color_fondo)
+            
             if activo:
-                arcade.draw_rect_outline(arcade.LBWH(rx, ry, rw, rh),
-                                         colores.AMARILLO, 2)
+                arcade.draw_rect_outline(arcade.LBWH(rx, ry, rw, rh), colores.AMARILLO, 2 + int(2 * latido_btn))
+                
             c.dibujar(f"btn_{nombre}", nombre.upper(), rx + rw / 2, ry + 8,
                       colores.BLANCO, 12, anchor_x="center", bold=True)
 

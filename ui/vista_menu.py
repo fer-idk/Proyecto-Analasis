@@ -16,6 +16,7 @@ import arcade
 from ui import colores
 from ui import animaciones as anim
 from ui.ventana_juego import VistaJuego, RUTA_MAPA
+from ui.vista_seleccion import VistaSeleccion
 
 CX = colores.VENTANA_ANCHO // 2
 BTN_W, BTN_H = 280, 56
@@ -108,7 +109,8 @@ class VistaMenu(arcade.View):
 
     def _accion(self, clave):
         if clave == "jugar":
-            self.window.show_view(VistaJuego())
+            vista_seleccion = VistaSeleccion()
+            self.window.show_view(vista_seleccion)
         elif clave == "reglas":
             self.window.show_view(VistaReglas())
         elif clave == "cerrar":

@@ -48,7 +48,8 @@ RUTA_DB = "partidas/risk_partida.db"
 
 
 class VistaJuego(arcade.View):
-    def __init__(self):
+    # Añadimos los parámetros heroe_j1 y heroe_j2
+    def __init__(self, heroe_j1="vendedor_minutas", heroe_j2="siguanaba"):
         super().__init__()
 
         territorios, config = cargar_mapa(RUTA_JSON)
@@ -58,9 +59,11 @@ class VistaJuego(arcade.View):
         for tid in ("cabanas", "la_paz", "san_vicente", "usulutan",
                     "san_miguel", "morazan", "la_union"):
             territorios[tid].tropas["dueno"] = "j2"
+            
+        # ¡AQUÍ ESTÁ EL CAMBIO PRINCIPAL! Usamos las variables en lugar del texto fijo
         jugadores = {
-            "j1": Jugador("j1", "Cuscatlecos", comandante="vendedor_minutas"),
-            "j2": Jugador("j2", "Pipiles", comandante="siguanaba"),
+            "j1": Jugador("j1", "Cuscatlecos", comandante=heroe_j1),
+            "j2": Jugador("j2", "Pipiles", comandante=heroe_j2),
         }
 
         self.estado = EstadoJuego(territorios, jugadores, config)
@@ -90,6 +93,14 @@ class VistaJuego(arcade.View):
         # La ventana guarda una referencia para cerrar la BD si se cierra todo
         self.window.juego = self
 
+        self._arrastrando = False
+        self.mensaje = ""
+        
+        # --- NUEVAS VARIABLES PARA EL HOVER ---
+        self.hovered_depto = None
+        self.mouse_x = 0
+        self.mouse_y = 0
+
     # ---------- Ciclo de vista ----------
     def on_show_view(self):
         self.window.background_color = colores.FONDO
@@ -113,13 +124,13 @@ class VistaJuego(arcade.View):
     # ---------- Dibujo ----------
     def on_draw(self):
         self.clear()
-        self.vista_mapa.dibujar(self.anim, self.objetivos)
-        self.anim.dibujar_mundo()                 # particulas y textos sobre el mapa
-        self._tint_peligro()                      # aviso de zona inestable
+        # Actualizamos la llamada a dibujar pasándole el hovered y el ratón
+        self.vista_mapa.dibujar(self.anim, self.objetivos, self.hovered_depto, self.mouse_x, self.mouse_y)
+        self.anim.dibujar_mundo()
+        self._tint_peligro()
         self.hud.dibujar(self.sel, self.anim)
         if self.mensaje:
-            self.cache.dibujar("mensaje", self.mensaje, 12, 10,
-                               colores.AMARILLO, 12, bold=True)
+            self.cache.dibujar("mensaje", self.mensaje, 12, 10, colores.AMARILLO, 12, bold=True)
         self.panel_batalla.dibujar(self.estado.metodo_activo, self.estado.h_activo)
 
     def on_update(self, dt):
@@ -184,6 +195,19 @@ class VistaJuego(arcade.View):
         depto = self.detector.departamento_en(x, y)
         if depto is not None:
             self._clic_territorio(depto)
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        """Detecta por dónde se mueve el ratón para los tooltips."""
+        self.mouse_x = x
+        self.mouse_y = y
+        
+        if self.terminado or self.panel_batalla.activo:
+            self.hovered_depto = None
+            return
+
+        # Vemos si el ratón está sobre algún departamento válido
+        depto = self.detector.departamento_en(x, y)
+        self.hovered_depto = depto
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if self._arrastrando:

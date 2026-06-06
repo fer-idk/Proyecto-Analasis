@@ -19,6 +19,7 @@ NEGRO = (20, 20, 20)
 GRIS = (90, 90, 90)
 AMARILLO = (255, 210, 40)
 PANEL = (34, 37, 45)
+ROJO = (220, 60, 60)
 
 # --- Color por dueno de territorio ---
 COLOR_JUGADOR = {
