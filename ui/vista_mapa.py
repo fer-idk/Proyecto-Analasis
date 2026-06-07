@@ -19,9 +19,22 @@ from ui import animaciones as anim
 class VistaMapa:
     def __init__(self, territorios, ruta_visible):
         self.territorios = territorios
-        self.textura = arcade.load_texture(ruta_visible)
-        self.seleccion = None     # id del departamento seleccionado
+        self.seleccion = None     
         self.cache = anim.CacheTexto()
+        
+        # --- NUEVO: Cargar los departamentos como Sprites ---
+        self.sprites_deptos = {}
+        for depto_id in territorios.keys():
+            # Asumimos que guardaste las imágenes como 'assets/mapa/deptos/san_miguel.png', etc.
+            ruta_imagen = f"assets/mapa/deptos/{depto_id}.png"
+            try:
+                sprite = arcade.Sprite(ruta_imagen)
+                # Centramos la imagen de 960x560 exactamente en medio de la pantalla del mapa
+                sprite.center_x = colores.MAPA_ANCHO / 2
+                sprite.center_y = colores.MAPA_ALTO / 2
+                self.sprites_deptos[depto_id] = sprite
+            except Exception as e:
+                print(f"Aviso: No se encontró la imagen para {depto_id}")
 
     def pos(self, territorio_id):
         """Centro de la ficha en coordenadas de Arcade (y hacia arriba)."""
@@ -30,10 +43,26 @@ class VistaMapa:
 
     def dibujar(self, gestor=None, objetivos=None, hovered=None, mx=0, my=0):
         objetivos = objetivos or set()
-        # Fondo del mapa
-        arcade.draw_texture_rect(
-            self.textura,
-            arcade.LBWH(0, 0, colores.MAPA_ANCHO, colores.MAPA_ALTO))
+        
+        # --- CAMBIO 1: Fondo del océano en lugar de la imagen estática ---
+        arcade.draw_rect_filled(arcade.LBWH(0, 0, colores.MAPA_ANCHO, colores.MAPA_ALTO), (30, 40, 50))
+
+        # --- CAMBIO 2: Dibujar los departamentos con el color de su dueño ---
+        for t in self.territorios.values():
+            # Verificamos que el sprite exista (por si falta alguna imagen)
+            if hasattr(self, 'sprites_deptos') and t.id in self.sprites_deptos:
+                sprite = self.sprites_deptos[t.id]
+                
+                # Obtener el color del dueño actual
+                color_dueno = colores.COLOR_JUGADOR.get(t.tropas["dueno"], colores.GRIS)
+                
+                # Si el ratón está encima (hover), lo hacemos brillar un poco más
+                if hovered == t.id:
+                    color_dueno = (min(255, color_dueno[0]+40), min(255, color_dueno[1]+40), min(255, color_dueno[2]+40))
+                
+                # Aplicamos el tinte y dibujamos la forma del departamento
+                sprite.color = color_dueno
+                sprite.draw()
 
         # 1. Resaltado interactivo de OBJETIVOS LEGALES
         if gestor is not None and objetivos:
@@ -69,8 +98,7 @@ class VistaMapa:
             arcade.draw_circle_filled(cx, ay, 15, col)
             arcade.draw_circle_outline(cx, ay, 15, colores.NEGRO, 2)
             
-            # --- NUEVO: Anillo de capacidad logística (K) ---
-            # Dibuja un arco alrededor de la ficha. 
+            # --- Anillo de capacidad logística (K) ---
             color_anillo = colores.BLANCO
             if pob > K_ef:
                 # ¡Euler rompió la capacidad límite! Peligro visual
@@ -92,7 +120,7 @@ class VistaMapa:
             rot = (gestor.t * 90) % 360 if gestor else 0
             arcade.draw_arc_outline(cx, ay, 46, 46, colores.AMARILLO, rot, rot + 270, border_width=4)
 
-        # --- NUEVO: Dibujar el Tooltip al pasar el ratón (Hover) ---
+        # --- Dibujar el Tooltip al pasar el ratón (Hover) ---
         if hovered and hovered in self.territorios:
             t_hover = self.territorios[hovered]
             # Fondo semitransparente
