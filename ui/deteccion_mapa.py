@@ -1,47 +1,44 @@
-"""
-deteccion_mapa.py
-=================
-Detecta sobre que departamento hizo clic el jugador, leyendo el color del
-pixel correspondiente en la imagen-mascara. Es la unica fuente de verdad para
-el mapeo color -> departamento (evita duplicar la tabla de colores).
-
-DETALLE CRITICO de coordenadas:
-    Arcade tiene el origen (0,0) abajo-izquierda, con y hacia ARRIBA.
-    Las imagenes (PIL) tienen el origen arriba-izquierda, con y hacia ABAJO.
-    Por eso hay que VOLTEAR la y al convertir un clic de Arcade a pixel de la
-    mascara:  pixel_y = alto - 1 - clic_y
-Si se omite este volteo, los clics seleccionan el departamento equivocado
-(reflejado verticalmente). Es el error mas comun en este tipo de deteccion.
-
-No depende de Arcade: usa solo PIL, por lo que se puede probar sin pantalla.
-"""
-
+# ui/deteccion_mapa.py
 from PIL import Image
 
-
 class DetectorMapa:
-    def __init__(self, ruta_mascara, color_a_id):
-        """
-        ruta_mascara : PNG de la mascara (colores planos por departamento)
-        color_a_id   : dict {(r,g,b): id_departamento}
-        """
-        self.mascara = Image.open(ruta_mascara).convert("RGB")
-        self.ancho, self.alto = self.mascara.size
-        self.color_a_id = color_a_id
+    def __init__(self, ruta_mascara):
+        # Cargamos la imagen de la máscara en memoria
+        self.imagen_mascara = Image.open(ruta_mascara).convert('RGB')
+        
+        # Mapeamos el color RGB de la máscara al nombre del departamento
+        self.colores_departamentos = {
+            (250, 190, 212): "san_miguel",  # Reemplaza con tus colores reales
+            (67, 99, 216): "santa_ana",
+            (255, 225, 25): "san_salvador",
+            (70, 153, 144): "la_union",
+            (220, 190, 255): "morazan",
+            (191, 239, 69): "usulutan",
+            (66, 212, 244): "san_vicente",
+            (145, 30, 180): "la_paz",
+            (230, 25, 75): "la_libertad",
+            (240, 50, 230): "chalatenango",
+            (245, 130, 49): "cuscatlan",
+            (154, 99, 36): "cabañas",
+            (128, 0, 0): "sonsonate",
+            (60, 180, 75): "ahuachapan"
+        }
 
-    def departamento_en(self, clic_x, clic_y):
-        """Devuelve el id del departamento bajo (clic_x, clic_y) en coordenadas
-        de Arcade, o None si el clic cae fuera del mapa o en color desconocido."""
-        ix = int(clic_x)
-        iy = int(self.alto - 1 - clic_y)          # volteo de Y (ver nota arriba)
-        if not (0 <= ix < self.ancho and 0 <= iy < self.alto):
+    def obtener_departamento_por_coordenada(self, x, y_pillow):
+        """Devuelve el nombre del departamento o None si hizo clic en el mar/frontera"""
+        try:
+            color_pixel = self.imagen_mascara.getpixel((x, y_pillow))
+            return self.colores_departamentos.get(color_pixel, None)
+        except IndexError:
+            # Por si el usuario hace clic fuera de los límites de la imagen
             return None
-        rgb = self.mascara.getpixel((ix, iy))
-        return self.color_a_id.get(rgb)
+        
 
-    @classmethod
-    def desde_territorios(cls, ruta_mascara, territorios):
-        """Construye el detector tomando los color_mask de los Territorio."""
-        from ui.colores import hex_a_rgb
-        color_a_id = {hex_a_rgb(t.color_mask): t.id for t in territorios.values()}
-        return cls(ruta_mascara, color_a_id)
+    def departamento_en(self, x, y):
+            # Acordate que si tu ventana_juego.py ya te invirtió la coordenada 'y', la usás directo.
+            # Si no, tenés que restarle la altura de la ventana (height - y).
+            try:
+                color_pixel = self.imagen_mascara.getpixel((x, int(y)))
+                return self.colores_departamentos.get(color_pixel, None)
+            except IndexError:
+                return None

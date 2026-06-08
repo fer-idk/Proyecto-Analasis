@@ -29,14 +29,14 @@ from core.jugador import Jugador
 from core.turnos import MotorTurnos
 from core import comandantes
 from core import estabilidad
-from core.gestor_eventos import GestorEventos
+from core.gestor_eventos import GestorEventos, GestorCaos
 from core.batalla import resolver as resolver_batalla
 from core.prediccion import predecir
 from persistencia.repositorio import Repositorio
 from ui import colores
 from ui import animaciones as anim
 from ui.vista_mapa import VistaMapa
-from ui.deteccion_mapa import DetectorMapa
+from ui.deteccion_pixel import DetectorPixelPerfect
 from ui.hud import HUD
 from ui.vista_batalla import PanelBatalla
 from ui.animaciones import GestorAnimaciones, CacheTexto
@@ -78,10 +78,18 @@ class VistaJuego(arcade.View):
         self.anim = GestorAnimaciones()
         self.cache = CacheTexto()
         self.vista_mapa = VistaMapa(territorios, RUTA_MAPA)
-        self.detector = DetectorMapa.desde_territorios(RUTA_MASCARA, territorios)
+        # Detector pixel-perfect: usa los MISMOS sprites que se dibujan (su
+        # center_x/center_y/scale en vivo) y cachea el canal alfa de cada PNG.
+        _sprites = self.vista_mapa.sprites_departamentos
+        _rutas = {
+            n: (f"assets/sprites/{n}.png" if n != "cabanas" else "assets/sprites/cabañas.png")
+            for n in _sprites
+        }
+        self.detector = DetectorPixelPerfect(_sprites, _rutas)
         self.hud = HUD(self.estado, config)
         self.panel_batalla = PanelBatalla(self.anim)
         self.gestor = GestorEventos(probabilidad=0.45)
+        self.gestor_caos = GestorCaos(self.estado.territorios)
 
         self.origen = None            # id del territorio de origen elegido
         self.objetivos = set()        # vecinos enemigos atacables del origen

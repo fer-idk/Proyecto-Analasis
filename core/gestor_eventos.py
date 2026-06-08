@@ -73,3 +73,97 @@ class GestorEventos:
             return f"Trafico en Los Chorros {estado_txt}."
 
         return None
+
+class GestorCaos:
+    def __init__(self, territorios):
+        self.territorios = territorios
+        # Turnos faltantes para que estalle el primer evento aleatorio
+        self.turnos_para_evento = random.randint(2, 5) 
+        self.evento_actual = None
+
+        # Catálogo de caos geográfico
+        self.catalogo_eventos = [
+            {
+                "nombre": "¡Feria de San Miguel!",
+                "afectados": ["san_miguel", "usulutan", "morazan", "la_union"],
+                "tipo": "boom",
+                "multiplicador": 3.0, # Triplica el crecimiento
+                "duracion": 2
+            },
+            {
+                "nombre": "Desborde del Río Lempa",
+                "afectados": ["chalatenango", "san_vicente", "usulutan"],
+                "tipo": "desastre",
+                "multiplicador": -2.0, # Mata tropas en lugar de crearlas
+                "duracion": 1
+            },
+            {
+                "nombre": "Fiebre Turística",
+                "afectados": ["la_libertad", "san_salvador", "sonsonate"],
+                "tipo": "mercenarios",
+                "multiplicador": 2.5,
+                "duracion": 3
+            }
+        ]
+
+    def procesar_turno(self):
+        """Llama a esta función cada vez que termine una ronda o turno global."""
+        
+        # 1. Reducir la duración del evento activo
+        if self.evento_actual:
+            self.evento_actual["duracion"] -= 1
+            if self.evento_actual["duracion"] <= 0:
+                self.limpiar_evento()
+
+        # 2. Cuenta regresiva para el siguiente desastre/milagro
+        if not self.evento_actual:
+            self.turnos_para_evento -= 1
+            if self.turnos_para_evento <= 0:
+                self.disparar_evento()
+
+        # 3. Aplicar las matemáticas de crecimiento a todo el mapa
+        self.crecer_tropas()
+
+    def disparar_evento(self):
+        self.evento_actual = random.choice(self.catalogo_eventos).copy()
+        # Resetear el temporizador para el siguiente evento (aleatorio entre 4 y 7 turnos)
+        self.turnos_para_evento = random.randint(4, 7) 
+
+        # Añadir la etiqueta al territorio (esto hará que tu UI lo muestre en rojo en los tooltips)
+        for dep in self.evento_actual["afectados"]:
+            if dep in self.territorios:
+                self.territorios[dep].eventos_activos.append(self.evento_actual["nombre"])
+
+    def limpiar_evento(self):
+        for dep in self.evento_actual["afectados"]:
+            if dep in self.territorios:
+                nombre_evt = self.evento_actual["nombre"]
+                if nombre_evt in self.territorios[dep].eventos_activos:
+                    self.territorios[dep].eventos_activos.remove(nombre_evt)
+        self.evento_actual = None
+
+    def crecer_tropas(self):
+        crecimiento_base = 1.2 # Tropas generadas por turno normal
+
+        for id_t, t in self.territorios.items():
+            # Obtener el límite logístico del territorio
+            r_ef, K_ef = t.parametros_tropas() 
+            pob = t.tropas['poblacion_actual']
+
+            multiplicador = 1.0
+
+            # Verificar si el departamento actual es víctima del caos
+            if self.evento_actual and id_t in self.evento_actual["afectados"]:
+                multiplicador = self.evento_actual["multiplicador"]
+
+            # Solo crecemos si no hemos llegado al tope del anillo logístico (K_ef)
+            # O si el multiplicador es negativo (desastre natural quitando tropas)
+            if pob < K_ef or multiplicador < 0:
+                nuevas_tropas = crecimiento_base * multiplicador
+                
+                # Actualizar población, asegurando que nunca baje de 1 tropa
+                t.tropas['poblacion_actual'] = max(1.0, pob + nuevas_tropas)
+                
+                # Opcional: Si supera la capacidad por un boom, lo topamos al máximo
+                if multiplicador > 0 and t.tropas['poblacion_actual'] > K_ef:
+                    t.tropas['poblacion_actual'] = K_ef
